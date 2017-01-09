@@ -114,11 +114,14 @@ class Beer(object):
         # seems like it's all getting done server side -- so we have to look
         # for the contents h1 to see if we're looking at the beer reference or
         # not
-        if "beer reference" in soup_rows[0].find_all('td')[1].h1.contents:
-            raise rb_exceptions.PageNotFound(self.url)
+        # if "beer reference" in soup_rows[0].find_all('td')[1].h1.contents:
+        #     raise rb_exceptions.PageNotFound(self.url)
+        
+        # if "Also known as " in soup_rows[1].find_all('td')[1].div.div.contents:
+        #     raise rb_exceptions.AliasedBeer(self.url, soup_rows[1].find_all('td')[1].div.div.a['href'])
 
-        if "Also known as " in soup_rows[1].find_all('td')[1].div.div.contents:
-            raise rb_exceptions.AliasedBeer(self.url, soup_rows[1].find_all('td')[1].div.div.a['href'])
+        if soup_rows is None:
+            raise rb_exceptions.PageNotFound(self.url) 
 
         # General information from the top of the page
         self.name = soup.find(itemprop='name').text.strip()
@@ -180,12 +183,7 @@ class Beer(object):
         else:
             self.retired = False
         # Description
-        description = soup.find('div',
-            style=(
-                'border: 1px solid #e0e0e0; background: #fff; '
-                'padding: 14px; color: #777;'
-            )
-        )
+        description = soup.find('div', 'commercial-description-container')
         if 'no commercial description' not in description.text.lower():
             # strip ads
             [s.extract() for s in description('small')]
@@ -229,7 +227,7 @@ class Beer(object):
         while True:
             complete_url = u'{0}{1}/{2}/'.format(self.url, url_flag, page_number)
             soup = soup_helper._get_soup(complete_url)
-            content = soup.find('table', style='padding: 10px;').tr.td
+            content = soup.find('div', 'reviews-container')
             reviews = content.find_all('div', style='padding: 0px 0px 0px 0px;')
             if len(reviews) < 1:
                 raise StopIteration
